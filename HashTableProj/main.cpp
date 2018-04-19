@@ -1,6 +1,4 @@
 #include <iostream>
-#include <string>
-
 #include "hashtable.h"
 
 using namespace std;
@@ -18,6 +16,7 @@ struct Operation{
 
 istream& operator>>(istream& in, Operation::TTYpe& value){
     char intId = '\0';
+
     in >> intId;
 
     if (intId == '+'){
@@ -25,12 +24,9 @@ istream& operator>>(istream& in, Operation::TTYpe& value){
     }else if (intId == '-'){
         value = Operation::TTYpe::Remove;
     }else if (intId == '?'){
-        value = Operation::TTYpe::Add;
+        value = Operation::TTYpe::Has;
     }else{
         value = Operation::TTYpe::None;
-        if (in.eof()){
-            cout << "Is here EOF\n";
-        }
     }
 
 
@@ -38,11 +34,24 @@ istream& operator>>(istream& in, Operation::TTYpe& value){
 }
 
 int main() {
-    HashTable<string> table;
+
+    auto hashFunc = [](const string& str, int a, int m){
+
+        int hash = 0;
+        for(const auto& ch: str){
+            hash = (hash * a + ch) % m;
+        }
+        return hash;
+
+    };
+
+    HashTable<string, decltype(hashFunc)> table(hashFunc);
+
+
 
     Operation op{};
-    while(cin >> op.value ) {
-        cin >> op.id;
+    while(cin >> op.id ) {
+        cin >> op.value;
 
         // TODO: проверить
         switch (op.id) {
@@ -59,7 +68,11 @@ int main() {
                 cout << "Invalid command";
                 break;
         }
+
+        cout << "\n";
+
     }
+
 
     return 0;
 }

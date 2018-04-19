@@ -3,4 +3,4 @@ project(HashTableProj)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(HashTableProj main.cpp hashtable.h )
+add_executable(HashTableProj main.cpp hashtable.h hashtable.hpp)

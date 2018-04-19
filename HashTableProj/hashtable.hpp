@@ -1,120 +1,134 @@
 
 #include <cstring>
 #include <string>
+#include <ostream>
+#include <iterator>
 
-//TODO: переделать на шаблоны
-//TODO: вместо hash использовать std::hash - это функтор
-// HashTable<T>::methods
-// TODO: resize buffer
+template<class T, class HashFunction>
+HashTable<T,HashFunction>::HashTable(HashFunction hash): bufferSize_(8), size_(0), buffer_(new T[bufferSize_]),
+    hash_(hash), bufferCondition_(new char[bufferSize_]), a(3) {
 
-
-
-template <class T>
-struct HashTable<T>::Node{
-    T value;
-    Node* next = nullptr;
-
-    explicit Node(const T& valueOther): value(std::move(valueOther)) {}
-};
-
-template<class T>
-HashTable<T>::HashTable(): bufferSize_(8), size_(0) {
-    buffer_ = new Node*[bufferSize_];
-
-    memset(buffer_, 0, bufferSize_ * sizeof(Node*));
+    memset(bufferCondition_, 0, bufferSize_* sizeof(char));
 
 }
 
-template <class T>
-bool HashTable<T>::Add(const T& value) {
+
+template<class T, class HashFunction>
+inline int HashTable<T, HashFunction>::probing(const int hash, int i) const {
+    return hash + i % bufferSize_;
+}
+
+
+template<class T, class HashFunction>
+bool HashTable<T, HashFunction>::Add(const T& value) {
+
     if (Has(value)){
         return false;
     }
 
-    const int hashKey = std::hash<T>()(value) % bufferSize_;
+    int hashKey = hash_(value, a, bufferSize_);
 
-    //while (buffer_[hashKey++ % bufferSize_] != nullptr) {}
+    // hash(k, 0) = hashKey
+    int hashProb = hashKey;
+    int i = 1;
 
-    //buffer_[hashKey] = Node(value);
 
-    Node* newNode = new Node(value);
+    while (bufferCondition_[hashProb] != 0 && bufferCondition_[hashProb] != -1 && i < size_) {
+        hashProb = probing(hashProb, i++) % bufferSize_;
+    }
 
-    newNode->next = buffer_[hashKey];
-    buffer_[hashKey] = newNode;
+    buffer_[hashProb] = value;
+    bufferCondition_[hashProb] = 1;
 
-    //TODO: проверка на переполнение
     size_++;
 
-    if (static_cast<double>(size_)/bufferSize_ > 0.75){
+    if (static_cast<double>(size_)/bufferSize_ >= 0.75){
         ReHash();
+        //std::cout << "HashTable size " << size_ << "buffer Size " << bufferSize_ << "\n";
     }
 
     return true;
 
 }
 
-template<class T>
-bool HashTable<T>::ReHash(){
+template<class T, class HashFunction>
+bool HashTable<T, HashFunction>::ReHash(){
 
-}
+    T *prevBuffer = new T[bufferSize_];
+    std::copy(buffer_, buffer_ + bufferSize_, prevBuffer);
 
-template <class T>
-bool HashTable<T>::Remove(const T& value) {
-    // TODO: проверить
+    char *prevBufferCondition = new char[bufferSize_];
+    std::copy(bufferCondition_, bufferCondition_ + bufferSize_, prevBufferCondition);
 
-    const int hashKey = std::hash<T>()(value) % bufferSize_;
+    delete[] buffer_;
+    delete[] bufferCondition_;
 
-    if (buffer_[hashKey] == nullptr)
-        return false;
+    a*=3;
+    bufferSize_<<=1;
+    size_ = 0;
 
-    Node* node = buffer_[hashKey];
+    buffer_ = new T[bufferSize_];
+    bufferCondition_ = new char[bufferSize_];
 
-    if (node->value == value){
-        buffer_[hashKey] = node->next;
+    memset(bufferCondition_, 0, bufferSize_ * sizeof(char));
 
-        delete node;
-        return true;
-
-    }
-
-
-    while ( node->next != nullptr){
-        if (node->next->value == value) {
-
-            Node* next = node->next;
-            node->next = next->next;
-            size_--;
-
-            delete next;
-            return true;
+    for (int i = 0; i < bufferSize_>>1; i++)
+        if (prevBufferCondition[i] == 1){
+            Add(prevBuffer[i]);
         }
-        node = node->next;
-    }
+
+    delete[] prevBuffer;
+    delete[] prevBufferCondition;
+    return true;
 
 }
 
-template <class T>
-bool HashTable<T>::Has(const T& value) const {
-    const int hashKey = std::hash<T>()(value) % bufferSize_;
-    const Node* node = buffer_[hashKey];
+template<class T, class HashFunction>
+bool HashTable<T, HashFunction>::Remove(const T& value) {
 
-    while ( node != nullptr){
-        if (node->value == value)
+    const int hashKey = hash_(value, a, bufferSize_);
+
+    // hash(k, 0) = hashKey
+    int hashProbe = hashKey;
+    int i = 1;
+
+    while(bufferCondition_[hashProbe] != 0){
+        if (buffer_[hashProbe] == value && bufferCondition_[hashProbe] != -1){
+            bufferCondition_[hashProbe] = -1;
+            size_--;
             return true;
-
-        node = node->next;
+        }else
+            hashProbe = probing(hashProbe, i++) % bufferSize_;
     }
 
     return false;
 }
 
-template <class T>
-HashTable<T>::~HashTable(){
+template<class T, class HashFunction>
+bool HashTable<T, HashFunction>::Has(const T& value) const {
+    const int hashKey = hash_(value, a, bufferSize_);
+
+    int hashProb = hashKey;
+    int i = 1;
+
+    while (bufferCondition_[hashProb] != 0 && i < size_){
+        if (buffer_[hashProb] == value && bufferCondition_[hashProb] != -1)
+            return true;
+        else
+            hashProb = probing(hashProb, i++) % bufferSize_;
+    }
+
+
+    return false;
+}
+
+template<class T, class HashFunction>
+HashTable<T, HashFunction>::~HashTable() noexcept {
     free();
 }
 
-template <class T>
-HashTable<T> &HashTable<T>::operator=(HashTable<T> &&other) noexcept {
+template<class T, class HashFunction>
+HashTable<T, HashFunction> &HashTable<T, HashFunction>::operator=(HashTable<T, HashFunction> &&other) noexcept {
 
     if (this == &other)
         return *this;
@@ -125,29 +139,26 @@ HashTable<T> &HashTable<T>::operator=(HashTable<T> &&other) noexcept {
     bufferSize_ = other.bufferSize_;
     size_ = other.size_;
 
+    hash_ = other.hash_;
+    other.hash_ = nullptr;
     other.buffer_ = nullptr;
 
-    // TODO: Дописать
     return *this;
 }
 
-/*template<class T>
-void HashTable<T>::free() noexcept{
+template<class T, class HashFunction>
+void HashTable<T, HashFunction>::Show() {
+
     for (int i = 0; i < bufferSize_; i++)
-        delete buffer_[i];
+        if (bufferCondition_[i] == 1)
+            std::cout << i << ") " << buffer_[i] << "\n";
 
-    delete[] buffer;
-}*/
-
-template <class T>
-void HashTable<T>::free(){
-    for ( int i = 0; i < bufferSize_; i++){
-        while( buffer_[i] != nullptr){
-            Node* toDelete = buffer_[i];
-            buffer_[i] = toDelete->next;
-            delete toDelete;
-        }
-    }
-
-    delete buffer_;
 }
+
+
+template<class T, class HashFunction>
+void HashTable<T, HashFunction>::free() noexcept{
+    delete[] bufferCondition_;
+    delete[] buffer_;
+}
+

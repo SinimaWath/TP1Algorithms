@@ -7,35 +7,40 @@
 
 #include <algorithm>
 
-constexpr static int gcd();
-
-// Переделать на шаблоны
-template <class T>
+template <class T, class HashFunction>
 class HashTable{
 public:
 
-    HashTable();
+    HashTable() = delete;
+
+    HashTable(HashFunction hash);
     HashTable(const HashTable& other) = delete;
     HashTable(HashTable&& other) noexcept { *this = std::move(other); }
-    ~HashTable();
+    ~HashTable() noexcept ;
 
     HashTable& operator=(const HashTable& other) = delete;
     HashTable& operator=(HashTable&& other) noexcept ;
 
     bool Add(const T& value);
     bool Remove(const T& value);
-    bool Has(const T& value) const;
+    bool Has(const T& value ) const;
     bool ReHash();
 
-private:
-    struct Node;
+    void Show();
 
-    Node** buffer_;
+    HashFunction hash_;
+
+private:
     int bufferSize_;
     int size_;
+    T *buffer_;
+    char *bufferCondition_;
+    int a;
 
-    void free();
+    inline int probing(int hash, int i) const;
+    void free() noexcept ;
 };
+
 
 #include "hashtable.hpp"
 // Переделать на hpp
