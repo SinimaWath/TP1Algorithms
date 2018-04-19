@@ -54,11 +54,8 @@ bool HashTable<T, HashFunction>::Add(const T& value) {
 template<class T, class HashFunction>
 bool HashTable<T, HashFunction>::ReHash(){
 
-    T *prevBuffer = new T[bufferSize_];
-    std::copy(buffer_, buffer_ + bufferSize_, prevBuffer);
-
-    char *prevBufferCondition = new char[bufferSize_];
-    std::copy(bufferCondition_, bufferCondition_ + bufferSize_, prevBufferCondition);
+    T* prevBuffer = buffer_;
+    char* prevBufferCondition = bufferCondition_;
 
     delete[] buffer_;
     delete[] bufferCondition_;
