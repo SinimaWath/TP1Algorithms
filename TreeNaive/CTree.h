@@ -9,16 +9,17 @@
 #include <set>
 #include <memory>
 #include <cassert>
+#include <stack>
 
 template <class T, class Comparator = std::less_equal<T>>
 class CTree {
 public:
     CTree(): root_(nullptr), size_(0) {}
+    ~CTree();
     CTree(const CTree&) = delete;
     CTree&operator= (const CTree&) = delete;
 
-    CTree(CTree && tree) noexcept :comp_(std::move(tree.comp_)),
-                                   root_(std::move(tree.root_)), size_(std::move(tree.size_)) { tree.root_ = nullptr; }
+    CTree(CTree && tree) noexcept : root_(std::move(tree.root_)), size_(std::move(tree.size_)) { tree.root_ = nullptr; }
 
     CTree&operator=(CTree&& tree) noexcept {
 
@@ -28,7 +29,6 @@ public:
 
         root_ = std::move(tree.root_);
         size_ = std::move(tree.size_);
-        comp_ = std::move(tree.comp_);
 
         tree.root_ = nullptr;
 
@@ -37,7 +37,9 @@ public:
 
     bool Add(const T& value);
     bool Delete(const T& value);
-    void Traversal();
+    bool Traversal();
+    void Method(const T&);
+    bool Empty();
 
 private:
     struct Node;
@@ -65,7 +67,7 @@ bool CTree<T, Comparator>::Add(const T &value) {
     if (root_ == nullptr){
         root_ = new Node(value);
 
-        std::cout << "Was added: " <<root_->value << std::endl;
+        //std::cout << "Was added: " <<root_->value << std::endl;
     }else {
 
         Node* tmpSearch = root_;
@@ -95,16 +97,83 @@ bool CTree<T, Comparator>::Add(const T &value) {
             parentSearch->leftChild = new Node(value);
             parentSearch->leftChild->parent = parentSearch;
 
-            std::cout << value  << " is added as left child of " << parentSearch->value << "\n";
+            //std::cout << value  << " is added as left child of " << parentSearch->value << "\n";
         }else{
             parentSearch->rightChild = new Node(value);
             parentSearch->rightChild->parent = parentSearch;
 
-            std::cout << value  << " is added as right child of " << parentSearch->value << "\n";
+            //std::cout << value  << " is added as right child of " << parentSearch->value << "\n";
         }
 
     }
     return true;
+}
+
+template<class T, class Comparator>
+void CTree<T, Comparator>::Method(const T& value) {
+    std::cout << value << " ";
+}
+
+template<class T, class Comparator>
+bool CTree<T, Comparator>::Traversal() {
+    if (Empty()){
+        //std::cout << "isEmpty()\n";
+        return false;
+    }
+
+    std::stack<Node*> nodeStack;
+    nodeStack.push(root_);
+
+    while (!nodeStack.empty()){
+        Node* currentNode = nodeStack.top();
+        nodeStack.pop();
+
+        if (currentNode != nullptr){
+            Method(currentNode->value);
+            if (currentNode->rightChild != nullptr)
+                nodeStack.push(currentNode->rightChild);
+            if (currentNode->leftChild != nullptr)
+                nodeStack.push(currentNode->leftChild);
+        }
+    }
+
+    return true;
+}
+
+template<class T, class Comparator>
+bool CTree<T, Comparator>::Empty() {
+    return root_ == nullptr;
+}
+
+template<class T, class Comparator>
+CTree<T, Comparator>::~CTree() {
+    std::stack<Node*> nodeStack;
+    nodeStack.push(root_);
+
+    while (!nodeStack.empty()){
+        Node* currentNode = nodeStack.top();
+        if (currentNode != nullptr && currentNode->leftChild == nullptr && currentNode->rightChild == nullptr){
+            nodeStack.pop();
+            if (currentNode->parent == nullptr)
+                delete currentNode;
+            else{
+                if (currentNode->parent->leftChild == currentNode){
+                    delete currentNode->parent->leftChild;
+                    currentNode->parent->leftChild = nullptr;
+                }
+                else {
+                    delete currentNode->parent->rightChild;
+                    currentNode->parent->rightChild = nullptr;
+                }
+            }
+        }else if (currentNode != nullptr){
+            if (currentNode->rightChild != nullptr)
+                nodeStack.push(currentNode->rightChild);
+            if (currentNode->leftChild != nullptr)
+                nodeStack.push(currentNode->leftChild);
+        }
+
+    }
 }
 
 #include "CTree.hpp"
