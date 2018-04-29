@@ -20,6 +20,8 @@ int main() {
         tree.Add(tmpCinElement);
     }
 
-    tree.Traversal();
+    tree.Traversal([](CTree<int>::Node* node){
+        cout << node->value << "\n";
+    });
     return 0;
 }
