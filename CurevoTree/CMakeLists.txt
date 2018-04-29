@@ -3,4 +3,4 @@ project(CurevoTree)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(CurevoTree main.cpp ITree.h NaiveTree.cpp NaiveTree.h)
+add_executable(CurevoTree main.cpp ITree.h NaiveTree.h)
