@@ -8,6 +8,7 @@
 #include <functional>
 #include <cassert>
 #include <stack>
+#include <queue>
 #include "ITree.h"
 template <class T, class Traversal = PreOrderTraversal, class Comparator = std::less<T>>
 class NaiveTree: public ITree<T>{
@@ -27,33 +28,48 @@ public:
         other.root_ = nullptr;
     }
 
+    ~NaiveTree() noexcept{
+        DeleteTree();
+    }
     void Add(const T &value) override;
     bool Delete(const T &value) override;
     bool Empty() const override;
     void DeleteTree() override;
-    void TraversalFunc() override;
 
-private:
+    // Это функция нужна, чтобы пользователь мог вызвать Traversal со своим методом
+    // Вроде прикольно :0
+    // Traversal функтор можно передавать разный через параметры шаблона
+    // И использовать в классе и вне класса.
+    // Конечно, вообще не ООП подход, просто было скучно :(
+    template <class Method>
+    void TraversalFunc(Method method);
+
+    int GetDepth() override;
+
     struct Node;
+private:
 
     Traversal traversal_;
     Comparator comp_;
 
     Node* root_;
+
+    int FindDepth(Node*);
 };
 
 template <class T, class Traversal, class Comparator>
 struct NaiveTree<T, Traversal, Comparator>::Node{
     T value;
+    int depth;
     Node* leftChild;
     Node* rightChild;
-    Node() = default;
-    explicit Node(const T& otherValue) : value(otherValue), leftChild(nullptr), rightChild(nullptr){}
+    explicit Node(const T& otherValue) : value(otherValue), depth(0), leftChild(nullptr), rightChild(nullptr){}
 };
 template<class T, class Traversal, class Comparator>
 void NaiveTree<T, Traversal, Comparator>::Add(const T &value) {
     if (root_ == nullptr){
         root_ = new Node(value);
+        root_->depth = 1;
     }else {
 
         Node* tmpSearch = root_;
@@ -74,10 +90,13 @@ void NaiveTree<T, Traversal, Comparator>::Add(const T &value) {
 
         assert(parent != nullptr);
 
+        auto newNode = new Node(value);
+        newNode->depth = parent->depth + 1;
+
         if (isLeftChild){
-            parent->leftChild = new Node(value);
+            parent->leftChild = newNode;
         }else{
-            parent->rightChild = new Node(value);
+            parent->rightChild = newNode;
         }
 
     }
@@ -102,12 +121,25 @@ void NaiveTree<T, Traversal, Comparator>::DeleteTree() {
 }
 
 template<class T, class Traversal, class Comparator>
-void NaiveTree<T, Traversal, Comparator>::TraversalFunc() {
-    traversal_(root_, [](Node* node){
-        std::cout << node->value << " ";
-    });
+template<class Method>
+void NaiveTree<T, Traversal, Comparator>::TraversalFunc(Method method) {
+    traversal_(root_, method);
 }
 
+template<class T, class Traversal, class Comparator>
+int NaiveTree<T, Traversal, Comparator>::GetDepth() {
+    return FindDepth(root_);
+}
+
+template<class T, class Traversal, class Comparator>
+int NaiveTree<T, Traversal, Comparator>::FindDepth(Node* root){
+    int maxDepth = 0;
+    traversal_(root, [&maxDepth](Node* node){
+        maxDepth = std::max(maxDepth, node->depth);
+    });
+
+    return maxDepth;
+}
 
 
 #endif //CUREVOTREE_NAIVETREE_H

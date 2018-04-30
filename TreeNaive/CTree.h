@@ -15,7 +15,7 @@ template <class T, class Comparator = std::less<T>>
 class CTree {
 public:
     CTree(): root_(nullptr), size_(0) {}
-    ~CTree();
+    ~CTree() noexcept ;
     CTree(const CTree&) = delete;
     CTree&operator= (const CTree&) = delete;
 
@@ -27,6 +27,8 @@ public:
             return *this;
         }
 
+        DeleteTree();
+
         root_ = std::move(tree.root_);
         size_ = std::move(tree.size_);
 
@@ -36,7 +38,7 @@ public:
     }
 
     bool Add(const T& value);
-    bool Delete(const T& value);
+    void DeleteTree() noexcept;
     template<class Method>
     bool Traversal(Method method);
     //void Method(const T&);
@@ -133,11 +135,16 @@ bool CTree<T, Comparator>::Empty() {
 }
 
 template<class T, class Comparator>
-CTree<T, Comparator>::~CTree() {
+CTree<T, Comparator>::~CTree() noexcept {
+    DeleteTree();
+}
+
+template<class T, class Comparator>
+void CTree<T, Comparator>::DeleteTree() noexcept {
     Traversal([](Node* node){
-       delete(node);
+        delete(node);
     });
-};
+}
 
 #include "CTree.hpp"
 

@@ -8,17 +8,18 @@ int main() {
     std::cin >> inputLength;
 
     assert(inputLength >= 0);
-    NaiveTree<int> tree;
-    CurevoTree<std::pair<int, int>> cTree;
+    NaiveTree<int> nTree;
+    CurevoTree<int> cTree;
 
-    while (inputLength--){
+    while (inputLength--) {
 
-        int tmpCinElement = 0;
-        std::cin >> tmpCinElement;
-        tree.Add(tmpCinElement);
+        int tmpValue = 0, tmpPrior = 0;
+        std::cin >> tmpValue >> tmpPrior;
+        nTree.Add(tmpValue);
+        cTree.Add(std::pair<int, int>(tmpValue, tmpPrior));
+
     }
 
-    tree.TraversalFunc();
-    cTree.TraversalFunc();
+    std::cout << std ::abs(nTree.GetDepth() - cTree.GetDepth());
     return 0;
 }
