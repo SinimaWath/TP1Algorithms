@@ -3,6 +3,11 @@
 #include "NaiveTree.h"
 #include "CurevoTree.h"
 
+template <class T, class N = T>
+int findDepthDifference(ITree<T>& firstTree, ITree<N>& secondTree){
+    return std::abs(firstTree.GetDepth() - secondTree.GetDepth());
+}
+
 int main() {
     int inputLength = 0;
     std::cin >> inputLength;
@@ -20,6 +25,6 @@ int main() {
 
     }
 
-    std::cout << std ::abs(nTree.GetDepth() - cTree.GetDepth());
+    std::cout << findDepthDifference(nTree, cTree);
     return 0;
 }

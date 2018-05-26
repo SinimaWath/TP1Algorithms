@@ -43,5 +43,5 @@ private:
 
 
 #include "hashtable.hpp"
-// Переделать на hpp
+
 #endif //HASHTABLEPROJ_HASHTABLE_H
