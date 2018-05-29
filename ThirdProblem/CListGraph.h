@@ -33,6 +33,7 @@ public:
 private:
     //std::vector<std::unordered_set<>> a
     std::vector<std::list<int>> adjacencyList;
+    //std::vector<std::list<std::pair<int, int>>> adjacencyList;
     //std::multimap<std::pair<int, int>, int> edgesWeight;
     std::map<std::pair<int, int>, int> edgesWeight;
 };

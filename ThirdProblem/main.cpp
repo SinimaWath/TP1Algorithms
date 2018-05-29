@@ -18,7 +18,6 @@ int FindShortestWay(const shared_ptr<IWeightedGraph> &graph, int fromVec, int to
         q.erase(q.begin());
 
         auto nextVert = graph->GetNextVertices(v);
-
         for (const auto& to: nextVert){
             auto edgeWeight = graph->GetEdgeWeight(v, to);
             if (distances[v] + edgeWeight < distances[to] && edgeWeight != -1){

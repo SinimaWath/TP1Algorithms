@@ -45,10 +45,14 @@ CListGraph::CListGraph(const std::shared_ptr<IGraph>& igraph) {
 }
 
 void CListGraph::AddEdge(int from, int to, int weight) {
-    AddEdge(from, to);
-
-    edgesWeight.insert({{from, to}, weight});
-    //edgesWeight[{from ,to}] = weight;
+    auto it = edgesWeight.find({from, to});
+    if ( it != edgesWeight.end() ){
+        if ( it->second > weight )
+            edgesWeight[{from, to}] = weight;
+    }else {
+        AddEdge(from, to);
+        edgesWeight[{from, to}] = weight;
+    }
 }
 
 // -1 - means: there is no such edge
@@ -60,10 +64,11 @@ int CListGraph::GetEdgeWeight(int from, int to) {
 void CListGraph::Print() {
     int i = 0;
     for (const auto& vecVector : adjacencyList){
-        std::cout << i++ << " ";
+        std::cout << i<< " ";
         for (const auto& vec: vecVector ){
-            std::cout << vec << " ";
+            std::cout << vec << " weight: " << edgesWeight[{i, vec}] << "; ";
         }
         std::cout << "\n";
+        i++;
     }
 }
