@@ -3,4 +3,4 @@ project(ThirdProblem)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(ThirdProblem main.cpp igraph.h iweightedgraph.h CListGraph.cpp CListGraph.h)
+add_executable(ThirdProblem main.cpp igraph.h iweightedgraph.h CMapGraph.cpp CMapGraph.h)

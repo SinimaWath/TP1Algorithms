@@ -10,7 +10,6 @@
 struct IWeightedGraph : public IGraph{
     virtual ~IWeightedGraph() = default;
     virtual void AddEdge(int from, int to, int weight) = 0;
-    void AddEdge(int from, int to) override = 0;
     virtual int GetEdgeWeight(int from, int to) = 0;
 };
 
